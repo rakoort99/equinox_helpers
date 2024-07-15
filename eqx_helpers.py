@@ -17,6 +17,7 @@ import jax
 from jax import random
 import equinox as eqx
 import optax
+from jaxtyping import Array
 
 # PyTorch for data loading
 import torch
@@ -134,13 +135,27 @@ class EqxTrainerModule:
         }
         self.config.update(kwargs)
         # Create empty model. Note: no parameters yet
-        self.key, subkey = random.split(self.key)
+        self.key, subkey1, subkey2 = random.split(self.key, 3)
         self.model, self.state = eqx.nn.make_with_state(self.model_class)(
-            key=subkey, **self.model_hparams
+            key=subkey1, **self.model_hparams
         )
+        # Custom weight init
+        self.model_init(subkey2)
         # Init trainer parts
         self.init_logger(logger_params)
         self.create_jitted_functions()
+    def model_init(self, key:Array):
+        """Custom initialization. If relevant, should be redefined in trainer class. Example below:
+
+        Args:
+            model (eqx.Module): Model pytree
+            key (Array): PRNG key
+
+        Returns:
+            (eqx.Module): Re-initialized model.
+        """
+        pass
+
 
     def init_logger(self, logger_params: Optional[Dict]):
         """
